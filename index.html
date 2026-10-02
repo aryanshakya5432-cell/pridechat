@@ -1,0 +1,981 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PrideChat - Ultimate Messenger</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #030712; color: #fff; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+        .lion-logo {
+            width: 45px; height: 45px;
+            background: linear-gradient(145deg, #4f46e5, #3730a3);
+            color: white; display: flex; align-items: center; justify-content: center;
+            border-radius: 50%; font-weight: bold; box-shadow: 0 10px 20px rgba(79, 70, 229, 0.4);
+        }
+        .panel-3d {
+            background: linear-gradient(145deg, #1f2937, #111827);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8);
+        }
+        .btn-3d {
+            background: linear-gradient(145deg, #4f46e5, #4338ca);
+            box-shadow: 0 6px 15px rgba(79, 70, 229, 0.4);
+            transition: all 0.2s ease;
+        }
+        .btn-3d:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(79, 70, 229, 0.6); }
+        .insta-border { border-right: 1px solid rgba(255, 255, 255, 0.08); border-bottom: 1px solid rgba(255, 255, 255, 0.08); }
+        .insta-input { background: #1f2937; border: 1px solid rgba(255, 255, 255, 0.1); }
+        .insta-post-card { background: #111827; border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 16px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
+    </style>
+</head>
+<body class="flex h-screen overflow-hidden">
+
+    <!-- AUDIO NOTIFICATION ELEMENT -->
+    <audio id="notification-sound" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3" preload="auto"></audio>
+
+    <!-- AUTH SECTION -->
+    <div id="auth-container" class="flex-1 flex items-center justify-center bg-gray-950 p-4">
+        <div class="panel-3d p-8 rounded-3xl max-w-md w-full text-center">
+            <div class="flex justify-center mb-4"><div class="lion-logo text-xl">🦁</div></div>
+            <h1 class="text-3xl font-extrabold mb-2 tracking-wider text-white">PrideChat</h1>
+            <p class="text-xs text-indigo-400 mb-6">Private & Group Messenger</p>
+            
+            <div class="space-y-4">
+                <div class="text-left">
+                    <label class="block text-xs font-semibold uppercase text-gray-400 mb-1">Username</label>
+                    <input type="text" id="login-username" placeholder="Enter username" class="w-full insta-input p-3.5 rounded-xl text-sm text-white focus:outline-none focus:border-indigo-500">
+                </div>
+                <div class="text-left">
+                    <label class="block text-xs font-semibold uppercase text-gray-400 mb-1">Password</label>
+                    <input type="password" id="login-password" placeholder="Enter password" class="w-full insta-input p-3.5 rounded-xl text-sm text-white focus:outline-none focus:border-indigo-500">
+                </div>
+                <button type="button" id="secure-login-btn" class="w-full btn-3d text-white font-bold p-3.5 rounded-xl shadow-lg cursor-pointer">Secure Login 🚀</button>
+            </div>
+            <p id="auth-msg" class="mt-4 text-xs font-medium"></p>
+        </div>
+    </div>
+
+    <!-- MAIN APP INTERFACE -->
+    <div id="app-container" class="hidden flex-1 flex w-full h-full relative bg-gray-950">
+        <input type="file" id="create-media-input" accept="image/*,video/*" class="hidden">
+        <input type="file" id="bg-image-input" accept="image/*" class="hidden">
+        <input type="file" id="profile-pic-input" accept="image/*" class="hidden">
+
+        <!-- Left Sidebar -->
+        <div class="hidden md:flex w-20 xl:w-64 insta-border flex-col justify-between p-5 bg-gray-900/50 backdrop-blur-md">
+            <div>
+                <div class="flex items-center mb-8">
+                    <div class="lion-logo text-sm">🦁</div>
+                    <h1 class="hidden xl:block text-lg font-bold font-serif ml-3 text-white">PrideChat</h1>
+                </div>
+                <div class="space-y-2">
+                    <a href="#" class="flex items-center p-3 hover:bg-gray-800 rounded-xl space-x-3 font-semibold text-sm text-gray-300">🏠 <span class="hidden xl:inline">Home</span></a>
+                    <a href="#" id="search-nav-btn" class="flex items-center p-3 hover:bg-gray-800 rounded-xl space-x-3 font-semibold text-sm text-gray-300">🔍 <span class="hidden xl:inline">Search Users</span></a>
+                    <a href="#" id="create-group-nav-btn" class="flex items-center p-3 hover:bg-gray-800 rounded-xl space-x-3 font-semibold text-sm text-indigo-400">👥 <span class="hidden xl:inline">Create Group</span></a>
+                    <a href="#" id="create-btn" class="flex items-center p-3 hover:bg-gray-800 rounded-xl space-x-3 font-semibold text-sm text-gray-300">➕ <span class="hidden xl:inline">Create Post</span></a>
+                    <a href="#" id="theme-btn" class="flex items-center p-3 hover:bg-gray-800 rounded-xl space-x-3 font-semibold text-sm text-gray-300">🎨 <span class="hidden xl:inline">Themes</span></a>
+                    <a href="#" id="profile-btn" class="flex items-center p-3 hover:bg-gray-800 rounded-xl space-x-3 font-semibold text-sm text-gray-300">👤 <span class="hidden xl:inline">Profile</span></a>
+                    <!-- ADMIN PANEL BUTTON -->
+                    <a href="#" id="admin-nav-btn" class="hidden flex items-center p-3 bg-red-600/20 text-red-400 hover:bg-red-600/30 rounded-xl space-x-3 font-semibold text-sm">🛡️ <span class="hidden xl:inline">Admin Panel</span></a>
+                </div>
+            </div>
+            <div id="user-profile-badge" class="p-3 text-xs text-indigo-300 bg-gray-900 border border-gray-800 rounded-xl font-semibold truncate shadow-inner">@user</div>
+        </div>
+
+        <!-- SEARCH MODAL -->
+        <div id="search-modal" class="hidden absolute inset-0 bg-gray-950/80 z-50 flex items-center justify-center p-4 backdrop-blur-md">
+            <div class="panel-3d p-6 rounded-3xl max-w-sm w-full relative shadow-2xl space-y-4">
+                <div class="flex justify-between items-center border-b border-gray-800 pb-3">
+                    <h3 class="font-bold text-base text-white">🔍 Search Users</h3>
+                    <button id="close-search-btn" class="text-gray-400 hover:text-white text-lg font-bold">✕</button>
+                </div>
+                <input type="text" id="search-user-input" placeholder="Type username..." oninput="filterUsers(this.value)" class="w-full insta-input p-3 rounded-xl text-xs text-white focus:outline-none">
+                <div id="search-results-list" class="max-h-48 overflow-y-auto divide-y divide-gray-800"></div>
+            </div>
+        </div>
+
+        <!-- CREATE GROUP MODAL -->
+        <div id="group-modal" class="hidden absolute inset-0 bg-gray-950/80 z-50 flex items-center justify-center p-4 backdrop-blur-md">
+            <div class="panel-3d p-6 rounded-3xl max-w-sm w-full relative shadow-2xl space-y-4">
+                <div class="flex justify-between items-center border-b border-gray-800 pb-3">
+                    <h3 class="font-bold text-base text-white">👥 Create Group & Add Members</h3>
+                    <button id="close-group-btn" class="text-gray-400 hover:text-white text-lg font-bold">✕</button>
+                </div>
+                <div class="space-y-3">
+                    <div>
+                        <label class="block text-xs font-semibold uppercase text-gray-400 mb-1">Group Name</label>
+                        <input type="text" id="group-name-input" placeholder="e.g. Coders Hub" class="w-full insta-input p-3 rounded-xl text-xs text-white focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase text-gray-400 mb-1">Add Members (Comma Separated)</label>
+                        <input type="text" id="group-members-input" placeholder="e.g. alexa, rahul, john" class="w-full insta-input p-3 rounded-xl text-xs text-white focus:outline-none">
+                    </div>
+                    <button id="submit-group-btn" class="w-full btn-3d p-3 rounded-xl text-xs font-bold text-white">Create Group 🚀</button>
+                </div>
+                <p id="group-action-msg" class="text-xs text-center font-medium mt-2"></p>
+            </div>
+        </div>
+
+        <!-- ADMIN PANEL MODAL -->
+        <div id="admin-modal" class="hidden absolute inset-0 bg-gray-950/80 z-50 flex items-center justify-center p-4 backdrop-blur-md">
+            <div class="panel-3d p-6 rounded-3xl max-w-md w-full relative shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+                <div class="flex justify-between items-center border-b border-gray-800 pb-3">
+                    <h3 class="font-bold text-base text-white">🛡️ Admin Management & SuperView</h3>
+                    <button id="close-admin-btn" class="text-gray-400 hover:text-white text-lg font-bold">✕</button>
+                </div>
+                <div class="space-y-3 bg-gray-900/60 p-4 rounded-2xl border border-gray-800">
+                    <h4 class="text-xs font-bold uppercase text-indigo-400">➕ Register New User</h4>
+                    <input type="text" id="new-admin-username" placeholder="Username" class="w-full insta-input p-2.5 rounded-xl text-xs text-white focus:outline-none mb-2">
+                    <input type="password" id="new-admin-password" placeholder="Password" class="w-full insta-input p-2.5 rounded-xl text-xs text-white focus:outline-none mb-2">
+                    <button id="create-user-btn" class="w-full btn-3d p-2.5 rounded-xl text-xs font-bold text-white">Create User Account 🚀</button>
+                </div>
+                <div class="space-y-3 bg-gray-900/60 p-4 rounded-2xl border border-gray-800">
+                    <h4 class="text-xs font-bold uppercase text-red-400">🔑 Change User Password</h4>
+                    <input type="text" id="target-username" placeholder="Target Username" class="w-full insta-input p-2.5 rounded-xl text-xs text-white focus:outline-none mb-2">
+                    <input type="password" id="target-new-password" placeholder="New Password" class="w-full insta-input p-2.5 rounded-xl text-xs text-white focus:outline-none mb-2">
+                    <button id="change-password-btn" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold p-2.5 rounded-xl text-xs shadow transition">Update Password 🔒</button>
+                </div>
+                <div class="space-y-3 bg-gray-900/60 p-4 rounded-2xl border border-gray-800">
+                    <h4 class="text-xs font-bold uppercase text-green-400">👁️ Super Admin: View All Chats</h4>
+                    <button onclick="loadAllChatsForAdmin()" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold p-2.5 rounded-xl text-xs shadow transition">Load All System Messages 📂</button>
+                    <div id="admin-global-chats" class="max-h-32 overflow-y-auto text-[11px] text-gray-300 space-y-1 bg-black/40 p-2 rounded-xl">Click button to view messages</div>
+                </div>
+                <p id="admin-action-msg" class="text-xs text-center font-medium mt-2"></p>
+            </div>
+        </div>
+
+        <!-- PROFILE MODAL -->
+        <div id="profile-modal" class="hidden absolute inset-0 bg-gray-950/80 z-50 flex items-center justify-center p-4 backdrop-blur-md">
+            <div class="panel-3d p-6 rounded-3xl max-w-md w-full relative shadow-2xl space-y-4">
+                <div class="flex justify-between items-center border-b border-gray-800 pb-3">
+                    <h3 class="font-bold text-base text-white">My Profile & Gallery</h3>
+                    <button id="close-profile-btn" class="text-gray-400 hover:text-white text-lg font-bold">✕</button>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <div id="avatar-container" class="relative cursor-pointer" title="Change Profile Picture">
+                        <div id="profile-avatar-lg" class="w-16 h-16 bg-gradient-to-tr from-indigo-500 to-purple-600 rounded-full flex items-center justify-center text-xl font-bold text-white shadow-xl overflow-hidden">U</div>
+                        <div class="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center text-white text-xs opacity-0 hover:opacity-100 transition">📷 Edit</div>
+                    </div>
+                    <div>
+                        <h4 id="profile-username" class="font-bold text-base text-white">@username</h4>
+                        <p id="profile-bio-text" class="text-xs text-indigo-400">Hey there! I am using PrideChat.</p>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold uppercase text-gray-400 mb-1">Edit Bio</label>
+                    <div class="flex gap-2">
+                        <input type="text" id="bio-input" placeholder="Write new bio..." class="flex-1 insta-input p-2.5 rounded-xl text-xs text-white focus:outline-none">
+                        <button id="save-bio-btn" class="btn-3d px-4 py-2 rounded-xl text-xs font-bold text-white">Save</button>
+                    </div>
+                </div>
+                <div>
+                    <h4 class="text-xs font-semibold uppercase text-gray-400 mb-2">My Shared Posts / Gallery</h4>
+                    <div id="user-posts-gallery" class="grid grid-cols-3 gap-2 max-h-40 overflow-y-auto bg-gray-900/50 p-2 rounded-xl border border-gray-800">
+                        <span class="text-[10px] text-gray-500 col-span-3 text-center py-4">No posts shared yet</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- THEME MODAL -->
+        <div id="theme-modal" class="hidden absolute inset-0 bg-gray-950/80 z-50 flex items-center justify-center p-4 backdrop-blur-md">
+            <div class="panel-3d p-6 rounded-3xl max-w-sm w-full text-center relative shadow-2xl space-y-4">
+                <div class="flex justify-between items-center mb-2 border-b border-gray-800 pb-3">
+                    <h3 class="font-bold text-base text-white">Choose Chat Theme</h3>
+                    <button id="close-theme-btn" class="text-gray-400 hover:text-white text-lg font-bold">✕</button>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <button onclick="setTheme('default')" class="p-3 bg-gray-900 hover:bg-indigo-600 rounded-xl text-xs font-semibold border border-gray-800 transition">🌑 Deep Space</button>
+                    <button onclick="setTheme('sunset')" class="p-3 bg-gradient-to-r from-purple-900 to-pink-900 hover:opacity-90 rounded-xl text-xs font-semibold border border-gray-800 transition">🌅 Sunset Vibes</button>
+                    <button onclick="setTheme('matrix')" class="p-3 bg-gray-950 text-green-400 hover:bg-green-950 rounded-xl text-xs font-semibold border border-green-900/50 transition">💻 Matrix Green</button>
+                    <button onclick="setTheme('royal')" class="p-3 bg-indigo-950 hover:bg-indigo-900 rounded-xl text-xs font-semibold border border-indigo-800 transition">👑 Royal Indigo</button>
+                </div>
+                <div class="border-t border-gray-800 pt-3">
+                    <button id="upload-wallpaper-btn" class="w-full p-3 btn-3d rounded-xl text-xs font-bold text-white">🖼 Upload Custom Wallpaper</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- CREATE MODAL -->
+        <div id="create-modal" class="hidden absolute inset-0 bg-gray-950/80 z-50 flex items-center justify-center p-4 backdrop-blur-md">
+            <div class="panel-3d p-6 rounded-3xl max-w-sm w-full text-center relative shadow-2xl">
+                <div class="flex justify-between items-center mb-4 border-b border-gray-800 pb-3">
+                    <h3 class="font-bold text-base text-white">Create New Post</h3>
+                    <button id="close-create-btn" class="text-gray-400 hover:text-white text-lg font-bold">✕</button>
+                </div>
+                <div class="space-y-3">
+                    <button onclick="triggerCreateAction('Post')" class="w-full p-3 bg-gray-800 hover:bg-indigo-600 rounded-xl text-sm font-semibold transition flex items-center justify-center space-x-2"><span>📸</span><span>New Post</span></button>
+                    <button onclick="triggerCreateAction('Story')" class="w-full p-3 bg-gray-800 hover:bg-indigo-600 rounded-xl text-sm font-semibold transition flex items-center justify-center space-x-2"><span>⭕</span><span>Add to Story</span></button>
+                    <button onclick="triggerCreateAction('Reel')" class="w-full p-3 bg-gray-800 hover:bg-indigo-600 rounded-xl text-sm font-semibold transition flex items-center justify-center space-x-2"><span>🎬</span><span>New Reel</span></button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Middle Column: Chats & Groups List -->
+        <div id="sidebar-chats" class="w-full md:w-80 insta-border flex flex-col bg-gray-900/40 h-full">
+            <div class="p-4 font-bold text-lg border-b border-gray-800 flex justify-between items-center bg-gray-900/60">
+                <span id="logged-username-title" class="text-white">Direct Chats</span>
+                <span class="text-xs bg-indigo-500/20 text-indigo-400 px-3 py-1 rounded-full">Secure</span>
+            </div>
+            <div id="users-list" class="flex-1 overflow-y-auto divide-y divide-gray-900/50"></div>
+        </div>
+
+        <!-- Right Column: Active Chat Window -->
+        <div id="chat-window" class="hidden md:flex flex-1 flex-col bg-gray-950 h-full absolute md:relative inset-0 z-10">
+            <!-- Chat Header -->
+            <div class="p-4 border-b border-gray-800 flex items-center justify-between bg-gray-900/60 backdrop-blur-md">
+                <div class="flex items-center space-x-3">
+                    <button id="back-to-chats-btn" class="md:hidden text-indigo-400 font-bold mr-2">← Back</button>
+                    <div class="w-10 h-10 bg-gradient-to-tr from-indigo-500 to-purple-600 rounded-full flex items-center justify-center font-bold text-white text-sm shadow-md" id="chat-avatar">💬</div>
+                    <div>
+                        <h3 id="active-chat-user" class="font-bold text-sm text-white">Select a chat</h3>
+                        <span id="typing-status" class="text-xs text-indigo-400">● Private 1-on-1 Room</span>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-3">
+                    <button onclick="initiateCall('audio')" class="p-2.5 bg-gray-800 hover:bg-gray-700 rounded-xl text-gray-200 transition shadow" title="Voice Call">📞</button>
+                    <button onclick="initiateCall('video')" class="p-2.5 bg-gray-800 hover:bg-gray-700 rounded-xl text-gray-200 transition shadow" title="Video Call">📹</button>
+                </div>
+            </div>
+
+            <!-- Call Screen Modal -->
+            <div id="call-modal" class="hidden absolute inset-0 bg-gray-950/95 z-50 flex flex-col items-center justify-center p-6 backdrop-blur-lg">
+                <div class="text-center mb-4"><h2 id="call-status" class="text-xl font-bold text-white mb-1">Connecting Call...</h2></div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 w-full max-w-2xl mb-6">
+                    <div class="bg-gray-900 rounded-3xl overflow-hidden border border-gray-800 h-60 flex items-center justify-center relative shadow-2xl">
+                        <span class="absolute bottom-3 left-3 text-xs bg-black/60 px-3 py-1 rounded-full text-white backdrop-blur">You</span>
+                        <video id="local-video" autoplay playsinline muted class="w-full h-full object-cover"></video>
+                    </div>
+                    <div class="bg-gray-900 rounded-3xl overflow-hidden border border-gray-800 h-60 flex items-center justify-center relative shadow-2xl">
+                        <span class="absolute bottom-3 left-3 text-xs bg-black/60 px-3 py-1 rounded-full text-white backdrop-blur">Peer</span>
+                        <video id="remote-video" autoplay playsinline class="w-full h-full object-cover"></video>
+                    </div>
+                </div>
+                <button onclick="endCall()" class="bg-red-600 hover:bg-red-700 text-white font-bold px-8 py-3.5 rounded-full shadow-lg transition transform hover:scale-105">End Call ❌</button>
+            </div>
+
+            <!-- Messages Area -->
+            <div id="chat-messages" class="flex-1 p-4 md:p-6 overflow-y-auto space-y-3 flex flex-col bg-cover bg-center">
+                <div class="text-center text-xs text-gray-400 my-2 bg-black/40 py-1 px-3 rounded-full self-center">Select a user or group from the sidebar to start messaging!</div>
+            </div>
+
+            <!-- Reply Preview Banner -->
+            <div id="reply-banner" class="hidden px-4 py-2 bg-gray-900 border-t border-gray-800 flex justify-between items-center text-xs text-gray-300">
+                <span id="reply-text-preview">Replying to message...</span>
+                <button id="cancel-reply-btn" class="text-red-400 font-bold">✕</button>
+            </div>
+
+            <!-- Emoji Picker Popup -->
+            <div id="emoji-picker" class="hidden absolute bottom-20 left-4 bg-gray-900 border border-gray-800 p-3 rounded-2xl shadow-2xl grid grid-cols-6 gap-2 z-30">
+                <button type="button" onclick="addEmoji('😊')" class="text-xl p-1 hover:bg-gray-800 rounded">😊</button>
+                <button type="button" onclick="addEmoji('🔥')" class="text-xl p-1 hover:bg-gray-800 rounded">🔥</button>
+                <button type="button" onclick="addEmoji('❤')" class="text-xl p-1 hover:bg-gray-800 rounded">❤️</button>
+                <button type="button" onclick="addEmoji('🚀')" class="text-xl p-1 hover:bg-gray-800 rounded">🚀</button>
+                <button type="button" onclick="addEmoji('😂')" class="text-xl p-1 hover:bg-gray-800 rounded">😂</button>
+                <button type="button" onclick="addEmoji('👍')" class="text-xl p-1 hover:bg-gray-800 rounded">👍</button>
+            </div>
+
+            <!-- Message Input Bar -->
+            <div class="p-3 md:p-4 border-t border-gray-800 flex items-center gap-2 bg-gray-900/80 backdrop-blur-md relative">
+                <button type="button" id="media-btn" class="p-2.5 bg-gray-800 hover:bg-gray-700 rounded-xl text-lg text-gray-300 transition" title="Send Photo/Video">📎</button>
+                <button type="button" id="emoji-btn" class="p-2.5 bg-gray-800 hover:bg-gray-700 rounded-xl text-lg text-gray-300 transition" title="Emojis">😊</button>
+                <button type="button" id="mic-btn" class="p-2.5 bg-gray-800 hover:bg-gray-700 rounded-xl text-lg text-gray-300 transition" title="Record Voice Note">🎤</button>
+                
+                <input type="text" id="chat-input" placeholder="Message..." class="flex-1 insta-input rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-indigo-500 shadow-inner">
+                <button type="button" id="send-msg-btn" class="btn-3d text-white font-semibold text-sm px-6 py-3 rounded-xl shadow-md cursor-pointer">Send ✈️</button>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        let loggedInUser = "";
+        let userBio = "Hey there! I am using PrideChat.";
+        let userAvatar = null;
+        let isAdmin = false;
+        let currentChatId = null;
+        let ws = null;
+        let localStream = null;
+        let peerConnection = null;
+        let currentCreateType = "Post";
+        let typingTimeout = null;
+        let replyingToMsg = null;
+        let mediaRecorder = null;
+        let audioChunks = [];
+        let isRecording = false;
+        let userGalleryPosts = [];
+        let allUsersCache = [];
+
+        const servers = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
+
+        document.addEventListener("DOMContentLoaded", () => {
+            const loginBtn = document.getElementById('secure-login-btn');
+            const usernameInput = document.getElementById('login-username');
+            const passwordInput = document.getElementById('login-password');
+
+            const handleLogin = async () => {
+                const username = usernameInput.value.trim();
+                const password = passwordInput.value.trim();
+                const msgEl = document.getElementById('auth-msg');
+                if (!username || !password) {
+                    msgEl.textContent = "Please enter username and password.";
+                    msgEl.className = "mt-4 text-xs font-medium text-red-500";
+                    return;
+                }
+
+                msgEl.textContent = "Logging in...";
+                msgEl.className = "mt-4 text-xs font-medium text-indigo-400";
+
+                try {
+                    const res = await fetch('http://127.0.0.1:8000/login', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ username, password })
+                    });
+                    
+                    const data = await res.json();
+                    
+                    if(res.ok && data.status === "success") {
+                        loggedInUser = username;
+                        if(data.bio) userBio = data.bio;
+                        if(data.avatar) userAvatar = data.avatar;
+                        isAdmin = data.is_admin;
+
+                        document.getElementById('auth-container').classList.add('hidden');
+                        document.getElementById('app-container').classList.remove('hidden');
+                        document.getElementById('user-profile-badge').textContent = `@${username}`;
+                        document.getElementById('logged-username-title').textContent = username;
+                        
+                        if (isAdmin) {
+                            document.getElementById('admin-nav-btn').classList.remove('hidden');
+                        }
+
+                        loadUsersAndGroups();
+                    } else {
+                        msgEl.textContent = data.detail || "Invalid username or password.";
+                        msgEl.className = "mt-4 text-xs font-medium text-red-500";
+                    }
+                } catch (err) {
+                    console.error(err);
+                    msgEl.textContent = "Server connection error! Check terminal.";
+                    msgEl.className = "mt-4 text-xs font-medium text-red-500";
+                }
+            };
+
+            loginBtn.onclick = handleLogin;
+            passwordInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleLogin();
+                }
+            });
+            usernameInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleLogin();
+                }
+            });
+
+            document.getElementById('create-btn').onclick = openCreateModal;
+            document.getElementById('close-create-btn').onclick = closeCreateModal;
+            document.getElementById('search-nav-btn').onclick = openSearchModal;
+            document.getElementById('close-search-btn').onclick = closeSearchModal;
+            document.getElementById('create-group-nav-btn').onclick = openGroupModal;
+            document.getElementById('close-group-btn').onclick = closeGroupModal;
+            document.getElementById('submit-group-btn').onclick = createGroup;
+            document.getElementById('theme-btn').onclick = toggleThemeModal;
+            document.getElementById('close-theme-btn').onclick = toggleThemeModal;
+            document.getElementById('profile-btn').onclick = openProfileModal;
+            document.getElementById('close-profile-btn').onclick = closeProfileModal;
+            document.getElementById('admin-nav-btn').onclick = openAdminModal;
+            document.getElementById('close-admin-btn').onclick = closeAdminModal;
+            document.getElementById('create-user-btn').onclick = createNewUserByAdmin;
+            document.getElementById('change-password-btn').onclick = changeUserPasswordByAdmin;
+            document.getElementById('save-bio-btn').onclick = saveBio;
+            document.getElementById('upload-wallpaper-btn').onclick = () => document.getElementById('bg-image-input').click();
+            document.getElementById('media-btn').onclick = () => document.getElementById('media-input').click();
+            document.getElementById('emoji-btn').onclick = toggleEmojiPicker;
+            document.getElementById('mic-btn').onclick = toggleVoiceRecording;
+            document.getElementById('back-to-chats-btn').onclick = backToChats;
+            document.getElementById('cancel-reply-btn').onclick = cancelReply;
+
+            document.getElementById('create-media-input').onchange = (e) => handleCreateMedia(e.target);
+            document.getElementById('bg-image-input').onchange = (e) => setCustomBgImage(e.target);
+            document.getElementById('profile-pic-input').onchange = (e) => handleProfilePicUpload(e.target);
+            document.getElementById('avatar-container').onclick = () => document.getElementById('profile-pic-input').click();
+
+            document.getElementById('chat-input').oninput = notifyTyping;
+            document.getElementById('send-msg-btn').onclick = sendChatMessage;
+            document.getElementById('chat-input').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    sendChatMessage();
+                }
+            });
+        });
+
+        async function loadUsersAndGroups() {
+            try {
+                const listDiv = document.getElementById('users-list');
+                listDiv.innerHTML = '';
+
+                const groupHeader = document.createElement('div');
+                groupHeader.className = "px-4 py-2 text-[10px] font-bold uppercase tracking-wider text-indigo-400 bg-gray-900/80";
+                groupHeader.textContent = "Groups & Channels";
+                listDiv.appendChild(groupHeader);
+
+                try {
+                    const groupRes = await fetch('http://127.0.0.1:8000/chats/groups');
+                    const groups = await groupRes.json();
+                    if (groups.length === 0) {
+                        const emptyG = document.createElement('div');
+                        emptyG.className = "p-3 text-xs text-gray-500 italic";
+                        emptyG.textContent = "No groups yet. Create one!";
+                        listDiv.appendChild(emptyG);
+                    } else {
+                        groups.forEach(g => {
+                            const item = document.createElement('div');
+                            item.className = "p-3.5 hover:bg-gray-800/60 cursor-pointer flex items-center space-x-3 transition border-b border-gray-900/30";
+                            item.innerHTML = `
+                                <div class="w-11 h-11 bg-gradient-to-tr from-indigo-600 to-pink-600 rounded-full flex items-center justify-center font-bold text-white text-sm shadow">👥</div>
+                                <div>
+                                    <h4 class="font-semibold text-sm text-white">${g.name}</h4>
+                                    <p class="text-xs text-indigo-400">Group Chat</p>
+                                </div>
+                            `;
+                            item.onclick = () => selectChatRoom(g.id, g.name, true);
+                            listDiv.appendChild(item);
+                        });
+                    }
+                } catch(err) { console.error("Groups load error", err); }
+
+                const directHeader = document.createElement('div');
+                directHeader.className = "px-4 py-2 text-[10px] font-bold uppercase tracking-wider text-indigo-400 bg-gray-900/80 mt-2";
+                directHeader.textContent = "Direct Messages";
+                listDiv.appendChild(directHeader);
+
+                const res = await fetch('http://127.0.0.1:8000/users');
+                allUsersCache = await res.json();
+                allUsersCache.forEach(u => {
+                    if(u.username !== loggedInUser) {
+                        const item = document.createElement('div');
+                        item.className = "p-3.5 hover:bg-gray-800/60 cursor-pointer flex items-center space-x-3 transition border-b border-gray-900/30";
+                        const avatarHTML = u.avatar ? `<img src="${u.avatar}" class="w-11 h-11 rounded-full object-cover shadow">` : `<div class="w-11 h-11 bg-gradient-to-tr from-indigo-500 to-purple-600 rounded-full flex items-center justify-center font-bold text-white text-sm shadow">${u.username[0].toUpperCase()}</div>`;
+                        item.innerHTML = `
+                            ${avatarHTML}
+                            <div>
+                                <h4 class="font-semibold text-sm text-white">@${u.username}</h4>
+                                <p class="text-xs text-gray-400">Direct Message</p>
+                            </div>
+                        `;
+                        item.onclick = () => openDirectChat(u.username);
+                        listDiv.appendChild(item);
+                    }
+                });
+            } catch(e) { console.error("Load users error:", e); }
+        }
+
+        function openSearchModal() { document.getElementById('search-modal').classList.remove('hidden'); }
+        function closeSearchModal() { document.getElementById('search-modal').classList.add('hidden'); }
+
+        function filterUsers(query) {
+            const resultsDiv = document.getElementById('search-results-list');
+            resultsDiv.innerHTML = '';
+            
+            if (!query.trim()) return;
+
+            const filtered = allUsersCache.filter(u => u.username.toLowerCase().includes(query.toLowerCase().trim()) && u.username !== loggedInUser);
+            
+            if (filtered.length === 0) {
+                resultsDiv.innerHTML = '<div class="p-3 text-xs text-gray-500 text-center">No user found</div>';
+                return;
+            }
+
+            filtered.forEach(u => {
+                const item = document.createElement('div');
+                item.className = "p-3 hover:bg-gray-800 cursor-pointer flex items-center space-x-2 text-xs text-white";
+                item.textContent = `@${u.username}`;
+                item.onclick = () => {
+                    closeSearchModal();
+                    openDirectChat(u.username);
+                };
+                resultsDiv.appendChild(item);
+            });
+        }
+
+        async function openDirectChat(targetUser) {
+            try {
+                const res = await fetch('http://127.0.0.1:8000/chats/get-or-create', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ user1: loggedInUser, user2: targetUser })
+                });
+                const data = await res.json();
+                selectChatRoom(data.chat_id, `@${targetUser}`, false);
+            } catch (e) { console.error(e); }
+        }
+
+        async function selectChatRoom(chatId, roomTitle, isGroup) {
+            currentChatId = chatId;
+            document.getElementById('active-chat-user').textContent = roomTitle;
+            document.getElementById('chat-avatar').textContent = roomTitle[1] ? roomTitle[1].toUpperCase() : '💬';
+            document.getElementById('chat-window').classList.remove('hidden');
+            
+            document.getElementById('chat-messages').innerHTML = `<div class="text-center text-xs text-gray-400 my-2 bg-black/40 py-1 px-3 rounded-full self-center">Connected to ${roomTitle}</div>`;
+            
+            try {
+                const res = await fetch(`http://127.0.0.1:8000/messages/${chatId}`);
+                const messages = await res.json();
+                messages.forEach(m => { appendMessageToDOM(m.sender, m.content); });
+            } catch(e) { console.error(e); }
+
+            if(ws) ws.close();
+            connectWebSocket(chatId);
+        }
+
+        function sendChatMessage() {
+            const input = document.getElementById('chat-input');
+            if (!currentChatId) {
+                alert("Pehle sidebar se koi chat ya group select karo!");
+                return;
+            }
+            if(ws && ws.readyState === WebSocket.OPEN && input.value.trim() !== "") {
+                let msg = input.value;
+                if (replyingToMsg) {
+                    msg = `[Reply to: "${replyingToMsg}"] ${msg}`;
+                    cancelReply();
+                }
+                ws.send(`${loggedInUser}:${msg}`);
+                input.value = '';
+            }
+        }
+
+        function connectWebSocket(chatId) {
+            ws = new WebSocket(`ws://127.0.0.1:8000/chat/${chatId}`);
+            ws.onmessage = (event) => {
+                const msgData = event.data;
+                if (msgData.includes(':CALL_SIGNAL:')) {
+                    const parts = msgData.split(':CALL_SIGNAL:');
+                    if (parts[0] !== loggedInUser) handleSignalingData(parts[1]);
+                    return;
+                }
+                if (msgData.includes(':TYPING:')) {
+                    const parts = msgData.split(':TYPING:');
+                    if (parts[0] !== loggedInUser) {
+                        document.getElementById('typing-status').textContent = parts[1] === 'start' ? `✍️ @${parts[0]} is typing...` : '● Active now';
+                    }
+                    return;
+                }
+                const parts = msgData.split(':');
+                const sender = parts[0];
+                
+                appendMessageToDOM(sender, msgData);
+
+                if (sender !== loggedInUser) {
+                    const audio = document.getElementById('notification-sound');
+                    audio.play().catch(e => console.log("Audio play blocked by browser policy"));
+                }
+            };
+        }
+
+        function backToChats() { document.getElementById('chat-window').classList.add('hidden'); }
+        function openCreateModal() { document.getElementById('create-modal').classList.remove('hidden'); }
+        function closeCreateModal() { document.getElementById('create-modal').classList.add('hidden'); }
+        
+        function openGroupModal() { document.getElementById('group-modal').classList.remove('hidden'); }
+        function closeGroupModal() { document.getElementById('group-modal').classList.add('hidden'); }
+
+        async function createGroup() {
+            const groupName = document.getElementById('group-name-input').value.trim();
+            const members = document.getElementById('group-members-input').value.split(',').map(m => m.trim()).filter(m => m);
+            const msgEl = document.getElementById('group-action-msg');
+            if(!groupName) {
+                msgEl.textContent = "Please enter group name!";
+                msgEl.className = "text-xs text-center font-medium mt-2 text-red-500";
+                return;
+            }
+            try {
+                const res = await fetch('http://127.0.0.1:8000/chats/create-group', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ admin_username: loggedInUser, group_name: groupName, members: members })
+                });
+                const data = await res.json();
+                if(res.ok) {
+                    msgEl.textContent = "Group created with members! 🎉";
+                    msgEl.className = "text-xs text-center font-medium mt-2 text-green-400";
+                    document.getElementById('group-name-input').value = '';
+                    document.getElementById('group-members-input').value = '';
+                    loadUsersAndGroups();
+                    setTimeout(() => closeGroupModal(), 1000);
+                } else {
+                    msgEl.textContent = data.detail || "Error creating group.";
+                    msgEl.className = "text-xs text-center font-medium mt-2 text-red-500";
+                }
+            } catch(e) { alert("Error connecting server"); }
+        }
+
+        async function loadAllChatsForAdmin() {
+            try {
+                const res = await fetch(`http://127.0.0.1:8000/admin/all-messages?admin_username=${loggedInUser}`);
+                const data = await res.json();
+                const container = document.getElementById('admin-global-chats');
+                container.innerHTML = '';
+                if(data.length === 0) {
+                    container.innerHTML = '<div>No messages found in system.</div>';
+                    return;
+                }
+                data.forEach(m => {
+                    const div = document.createElement('div');
+                    div.textContent = `[Room #${m.chat_id}] @${m.sender}: ${m.content}`;
+                    container.appendChild(div);
+                });
+            } catch(e) { alert("Unauthorized or error loading chats"); }
+        }
+
+        function toggleThemeModal() { document.getElementById('theme-modal').classList.toggle('hidden'); }
+        function openAdminModal() { document.getElementById('admin-modal').classList.remove('hidden'); }
+        function closeAdminModal() { document.getElementById('admin-modal').classList.add('hidden'); }
+
+        async function createNewUserByAdmin() {
+            const newUsername = document.getElementById('new-admin-username').value.trim();
+            const newPassword = document.getElementById('new-admin-password').value.trim();
+            const msgEl = document.getElementById('admin-action-msg');
+            if (!newUsername || !newPassword) {
+                msgEl.textContent = "Please fill username and password!";
+                msgEl.className = "text-xs text-center font-medium mt-2 text-red-500";
+                return;
+            }
+            try {
+                const res = await fetch('http://127.0.0.1:8000/admin/add-user', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ admin_username: loggedInUser, new_username: newUsername, new_password: newPassword })
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    msgEl.textContent = "User created successfully! 🎉";
+                    msgEl.className = "text-xs text-center font-medium mt-2 text-green-400";
+                    document.getElementById('new-admin-username').value = '';
+                    document.getElementById('new-admin-password').value = '';
+                    loadUsersAndGroups();
+                } else {
+                    msgEl.textContent = data.detail || "Error creating user.";
+                    msgEl.className = "text-xs text-center font-medium mt-2 text-red-500";
+                }
+            } catch (e) { msgEl.textContent = "Server error."; }
+        }
+
+        async function changeUserPasswordByAdmin() {
+            const targetUsername = document.getElementById('target-username').value.trim();
+            const newPassword = document.getElementById('target-new-password').value.trim();
+            const msgEl = document.getElementById('admin-action-msg');
+            if (!targetUsername || !newPassword) {
+                msgEl.textContent = "Please fill target username and new password!";
+                msgEl.className = "text-xs text-center font-medium mt-2 text-red-500";
+                return;
+            }
+            try {
+                const res = await fetch('http://127.0.0.1:8000/admin/change-password', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ admin_username: loggedInUser, target_username: targetUsername, new_password: newPassword })
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    msgEl.textContent = "Password updated successfully! 🔒";
+                    msgEl.className = "text-xs text-center font-medium mt-2 text-green-400";
+                    document.getElementById('target-username').value = '';
+                    document.getElementById('target-new-password').value = '';
+                } else {
+                    msgEl.textContent = data.detail || "Error updating password.";
+                    msgEl.className = "text-xs text-center font-medium mt-2 text-red-500";
+                }
+            } catch (e) { msgEl.textContent = "Server error."; }
+        }
+        
+        function openProfileModal() {
+            document.getElementById('profile-username').textContent = `@${loggedInUser}`;
+            document.getElementById('profile-bio-text').textContent = userBio;
+            document.getElementById('bio-input').value = userBio;
+            
+            const avatarLg = document.getElementById('profile-avatar-lg');
+            if (userAvatar) {
+                avatarLg.innerHTML = `<img src="${userAvatar}" class="w-full h-full object-cover">`;
+            } else {
+                avatarLg.textContent = loggedInUser[0].toUpperCase();
+            }
+
+            const gallery = document.getElementById('user-posts-gallery');
+            gallery.innerHTML = '';
+            if (userGalleryPosts.length === 0) {
+                gallery.innerHTML = '<span class="text-[10px] text-gray-500 col-span-3 text-center py-4">No posts shared yet</span>';
+            } else {
+                userGalleryPosts.forEach(src => {
+                    const img = document.createElement('img');
+                    img.src = src;
+                    img.className = "w-full h-16 object-cover rounded-lg border border-gray-800";
+                    gallery.appendChild(img);
+                });
+            }
+            document.getElementById('profile-modal').classList.remove('hidden');
+        }
+        function closeProfileModal() { document.getElementById('profile-modal').classList.add('hidden'); }
+
+        async function handleProfilePicUpload(input) {
+            const file = input.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = async function(e) {
+                    userAvatar = e.target.result;
+                    const avatarLg = document.getElementById('profile-avatar-lg');
+                    avatarLg.innerHTML = `<img src="${userAvatar}" class="w-full h-full object-cover">`;
+                    
+                    await fetch('http://127.0.0.1:8000/user/profile', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ username: loggedInUser, avatar: userAvatar })
+                    });
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        async function saveBio() {
+            const newBio = document.getElementById('bio-input').value;
+            try {
+                const res = await fetch('http://127.0.0.1:8000/user/profile', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: loggedInUser, bio: newBio })
+                });
+                if(res.ok) {
+                    userBio = newBio;
+                    document.getElementById('profile-bio-text').textContent = newBio;
+                    alert("Bio updated successfully! ✨");
+                }
+            } catch(e) { alert("Error updating profile"); }
+        }
+
+        function setTheme(type) {
+            const chatMsgs = document.getElementById('chat-messages');
+            chatMsgs.style.backgroundImage = 'none';
+            if (type === 'default') chatMsgs.style.backgroundColor = '#030712';
+            else if (type === 'sunset') chatMsgs.style.backgroundColor = '#31102b';
+            else if (type === 'matrix') chatMsgs.style.backgroundColor = '#021005';
+            else if (type === 'royal') chatMsgs.style.backgroundColor = '#101035';
+            toggleThemeModal();
+        }
+
+        function setCustomBgImage(input) {
+            const file = input.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const chatMsgs = document.getElementById('chat-messages');
+                    chatMsgs.style.backgroundImage = `url('${e.target.result}')`;
+                    toggleThemeModal();
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function triggerCreateAction(type) {
+            closeCreateModal();
+            currentCreateType = type;
+            document.getElementById('create-media-input').click();
+        }
+
+        function handleCreateMedia(input) {
+            const file = input.files[0];
+            if (file && ws && ws.readyState === WebSocket.OPEN) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    const base64Data = e.target.result;
+                    if(!file.type.startsWith('video')) { userGalleryPosts.push(base64Data); }
+                    ws.send(`${loggedInUser}:MEDIA:${currentCreateType}:${file.type.startsWith('video') ? 'video' : 'image'}:${base64Data}`);
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function toggleEmojiPicker() { document.getElementById('emoji-picker').classList.toggle('hidden'); }
+        function addEmoji(emoji) {
+            const input = document.getElementById('chat-input');
+            input.value += emoji;
+            document.getElementById('emoji-picker').classList.add('hidden');
+            input.focus();
+        }
+
+        function notifyTyping() {
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(`${loggedInUser}:TYPING:start`);
+                clearTimeout(typingTimeout);
+                typingTimeout = setTimeout(() => { ws.send(`${loggedInUser}:TYPING:stop`); }, 1500);
+            }
+        }
+
+        async function toggleVoiceRecording() {
+            const micBtn = document.getElementById('mic-btn');
+            if (!isRecording) {
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    mediaRecorder = new MediaRecorder(stream);
+                    audioChunks = [];
+                    mediaRecorder.ondataavailable = event => audioChunks.push(event.data);
+                    mediaRecorder.onstop = () => {
+                        const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                        const reader = new FileReader();
+                        reader.onload = function (e) {
+                            if (ws && ws.readyState === WebSocket.OPEN) {
+                                ws.send(`${loggedInUser}:VOICE:${e.target.result}`);
+                            }
+                        };
+                        reader.readAsDataURL(audioBlob);
+                    };
+                    mediaRecorder.start();
+                    isRecording = true;
+                    micBtn.classList.add('bg-red-600', 'animate-pulse');
+                } catch (e) { alert("Microphone access denied."); }
+            } else {
+                mediaRecorder.stop();
+                isRecording = false;
+                micBtn.classList.remove('bg-red-600', 'animate-pulse');
+            }
+        }
+
+        function setReply(text) {
+            replyingToMsg = text;
+            document.getElementById('reply-text-preview').textContent = `Replying to: "${text}"`;
+            document.getElementById('reply-banner').classList.remove('hidden');
+            document.getElementById('chat-input').focus();
+        }
+        function cancelReply() {
+            replyingToMsg = null;
+            document.getElementById('reply-banner').classList.add('hidden');
+        }
+
+        function addReaction(msgId, emoji) {
+            const el = document.getElementById(msgId);
+            let badge = el.querySelector('.reaction-badge');
+            if (!badge) {
+                badge = document.createElement('div');
+                badge.className = "reaction-badge absolute -bottom-2 right-2 bg-gray-900 border border-gray-700 text-xs px-2 py-0.5 rounded-full shadow";
+                el.appendChild(badge);
+            }
+            badge.textContent = emoji;
+        }
+
+        async function initiateCall(type) {
+            document.getElementById('call-modal').classList.remove('hidden');
+            document.getElementById('call-status').textContent = `Starting ${type} call...`;
+            try {
+                localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: type === 'video' });
+                document.getElementById('local-video').srcObject = localStream;
+                peerConnection = new RTCPeerConnection(servers);
+                localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
+                peerConnection.ontrack = event => { document.getElementById('remote-video').srcObject = event.streams[0]; };
+                peerConnection.onicecandidate = event => {
+                    if (event.candidate && ws.readyState === WebSocket.OPEN) {
+                        ws.send(`${loggedInUser}:CALL_SIGNAL:${JSON.stringify({ candidate: event.candidate })}`);
+                    }
+                };
+                const offer = await peerConnection.createOffer();
+                await peerConnection.setLocalDescription(offer);
+                ws.send(`${loggedInUser}:CALL_SIGNAL:${JSON.stringify({ offer })}`);
+            } catch (err) { console.error(err); }
+        }
+
+        async function handleSignalingData(dataStr) {
+            try {
+                const signal = JSON.parse(dataStr);
+                if (!peerConnection) {
+                    peerConnection = new RTCPeerConnection(servers);
+                    peerConnection.ontrack = event => { document.getElementById('remote-video').srcObject = event.streams[0]; };
+                    peerConnection.onicecandidate = event => {
+                        if (event.candidate && ws.readyState === WebSocket.OPEN) {
+                            ws.send(`${loggedInUser}:CALL_SIGNAL:${JSON.stringify({ candidate: event.candidate })}`);
+                        }
+                    };
+                    localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
+                    document.getElementById('local-video').srcObject = localStream;
+                    localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
+                }
+                if (signal.offer) {
+                    document.getElementById('call-modal').classList.remove('hidden');
+                    document.getElementById('call-status').textContent = "Incoming Call...";
+                    await peerConnection.setRemoteDescription(new RTCSessionDescription(signal.offer));
+                    const answer = await peerConnection.createAnswer();
+                    await peerConnection.setLocalDescription(answer);
+                    ws.send(`${loggedInUser}:CALL_SIGNAL:${JSON.stringify({ answer })}`);
+                } else if (signal.answer) {
+                    await peerConnection.setRemoteDescription(new RTCSessionDescription(signal.answer));
+                } else if (signal.candidate) {
+                    await peerConnection.addIceCandidate(new RTCIceCandidate(signal.candidate));
+                }
+            } catch (e) { console.error(e); }
+        }
+
+        function endCall() {
+            if (localStream) localStream.getTracks().forEach(track => track.stop());
+            if (peerConnection) peerConnection.close();
+            peerConnection = null;
+            document.getElementById('call-modal').classList.add('hidden');
+        }
+
+        function appendMessageToDOM(sender, msgData) {
+            const chatMessages = document.getElementById('chat-messages');
+            const msgId = 'msg_' + Math.random().toString(36).substr(2, 9);
+            const msgDiv = document.createElement('div');
+            const isMe = sender === loggedInUser;
+            msgDiv.className = `flex flex-col max-w-xs lg:max-w-md ${isMe ? 'self-end items-end' : 'self-start items-start'} mb-3 relative`;
+
+            let contentHTML = "";
+            if (msgData.includes(':MEDIA:')) {
+                const mediaParts = msgData.split(':MEDIA:');
+                const restParts = mediaParts[1].split(':');
+                contentHTML = `
+                    <div class="insta-post-card w-64 md:w-72">
+                        <div class="p-3 flex items-center space-x-2 border-b border-gray-800 bg-gray-900/85">
+                            <div class="w-7 h-7 bg-gradient-to-tr from-indigo-500 to-purple-600 rounded-full flex items-center justify-center font-bold text-xs text-white">${mediaParts[0][0].toUpperCase()}</div>
+                            <div class="flex flex-col">
+                                <span class="text-xs font-bold text-white">@${mediaParts[0]}</span>
+                                <span class="text-[9px] text-indigo-400">Shared ${restParts[0]}</span>
+                            </div>
+                        </div>
+                        <div class="bg-black flex items-center justify-center max-h-72 overflow-hidden">
+                            ${restParts[1] === 'video' ? `<video src="${restParts.slice(2).join(':')}" controls class="w-full object-cover max-h-72"></video>` : `<img src="${restParts.slice(2).join(':')}" class="w-full object-cover max-h-72">`}
+                        </div>
+                    </div>`;
+            } else if (msgData.includes(':VOICE:')) {
+                const voiceParts = msgData.split(':VOICE:');
+                contentHTML = `
+                    <span class="text-[10px] text-gray-400 mb-0.5">@${voiceParts[0]}</span>
+                    <div class="p-3 bg-gray-800/90 rounded-2xl flex items-center space-x-3 shadow backdrop-blur">
+                        <audio src="${voiceParts[1]}" controls class="h-8 w-48"></audio>
+                    </div>`;
+            } else {
+                const text = msgData.includes(':') && !msgData.startsWith('[Reply') ? msgData.substring(msgData.indexOf(':') + 1) : msgData;
+                contentHTML = `
+                    <span class="text-[10px] text-gray-400 mb-0.5">@${sender}</span>
+                    <div id="${msgId}" class="p-3.5 rounded-2xl text-sm relative group ${isMe ? 'bg-gradient-to-r from-indigo-600 to-indigo-700 text-white rounded-br-none shadow-md' : 'bg-gray-800/90 backdrop-blur text-white rounded-bl-none shadow-md'}">
+                        ${text}
+                        <div class="text-[9px] text-right mt-1 text-indigo-300 flex items-center justify-end gap-1">
+                            <span>Seen ✓✓</span>
+                        </div>
+                        <div class="absolute -top-7 right-0 hidden group-hover:flex bg-gray-900 border border-gray-800 px-2 py-1 rounded-full space-x-1 shadow-xl">
+                            <button onclick="addReaction('${msgId}', '❤️')">❤</button>
+                            <button onclick="addReaction('${msgId}', '😂')">😂</button>
+                            <button onclick="setReply('${text.replace(/'/g, "\\'")}')">↩️</button>
+                        </div>
+                    </div>`;
+            }
+
+            msgDiv.innerHTML = contentHTML;
+            chatMessages.appendChild(msgDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+    </script>
+</body>
+</html>
