@@ -328,7 +328,7 @@
                 msgEl.className = "mt-4 text-xs font-medium text-indigo-400";
 
                 try {
-                    const res = await fetch('http://127.0.0.1:8000/login', {
+                    const res = await fetch('/login', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ username, password })
@@ -426,7 +426,7 @@
                 listDiv.appendChild(groupHeader);
 
                 try {
-                    const groupRes = await fetch('http://127.0.0.1:8000/chats/groups');
+                    const groupRes = await fetch('/chats/groups');
                     const groups = await groupRes.json();
                     if (groups.length === 0) {
                         const emptyG = document.createElement('div');
@@ -455,7 +455,7 @@
                 directHeader.textContent = "Direct Messages";
                 listDiv.appendChild(directHeader);
 
-                const res = await fetch('http://127.0.0.1:8000/users');
+                const res = await fetch('/users');
                 allUsersCache = await res.json();
                 allUsersCache.forEach(u => {
                     if(u.username !== loggedInUser) {
@@ -506,7 +506,7 @@
 
         async function openDirectChat(targetUser) {
             try {
-                const res = await fetch('http://127.0.0.1:8000/chats/get-or-create', {
+                const res = await fetch('/chats/get-or-create', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ user1: loggedInUser, user2: targetUser })
@@ -525,7 +525,7 @@
             document.getElementById('chat-messages').innerHTML = `<div class="text-center text-xs text-gray-400 my-2 bg-black/40 py-1 px-3 rounded-full self-center">Connected to ${roomTitle}</div>`;
             
             try {
-                const res = await fetch(`http://127.0.0.1:8000/messages/${chatId}`);
+                const res = await fetch(`/messages/${chatId}`);
                 const messages = await res.json();
                 messages.forEach(m => { appendMessageToDOM(m.sender, m.content); });
             } catch(e) { console.error(e); }
@@ -552,7 +552,8 @@
         }
 
         function connectWebSocket(chatId) {
-            ws = new WebSocket(`ws://127.0.0.1:8000/chat/${chatId}`);
+            const wsProtocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
+            ws = new WebSocket(`${wsProtocol}${window.location.host}/chat/${chatId}`);
             ws.onmessage = (event) => {
                 const msgData = event.data;
                 if (msgData.includes(':CALL_SIGNAL:')) {
@@ -596,7 +597,7 @@
                 return;
             }
             try {
-                const res = await fetch('http://127.0.0.1:8000/chats/create-group', {
+                const res = await fetch('/chats/create-group', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ admin_username: loggedInUser, group_name: groupName, members: members })
@@ -618,7 +619,7 @@
 
         async function loadAllChatsForAdmin() {
             try {
-                const res = await fetch(`http://127.0.0.1:8000/admin/all-messages?admin_username=${loggedInUser}`);
+                const res = await fetch(`/admin/all-messages?admin_username=${loggedInUser}`);
                 const data = await res.json();
                 const container = document.getElementById('admin-global-chats');
                 container.innerHTML = '';
@@ -648,7 +649,7 @@
                 return;
             }
             try {
-                const res = await fetch('http://127.0.0.1:8000/admin/add-user', {
+                const res = await fetch('/admin/add-user', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ admin_username: loggedInUser, new_username: newUsername, new_password: newPassword })
@@ -677,7 +678,7 @@
                 return;
             }
             try {
-                const res = await fetch('http://127.0.0.1:8000/admin/change-password', {
+                const res = await fetch('/admin/change-password', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ admin_username: loggedInUser, target_username: targetUsername, new_password: newPassword })
@@ -732,7 +733,7 @@
                     const avatarLg = document.getElementById('profile-avatar-lg');
                     avatarLg.innerHTML = `<img src="${userAvatar}" class="w-full h-full object-cover">`;
                     
-                    await fetch('http://127.0.0.1:8000/user/profile', {
+                    await fetch('/user/profile', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ username: loggedInUser, avatar: userAvatar })
@@ -745,7 +746,7 @@
         async function saveBio() {
             const newBio = document.getElementById('bio-input').value;
             try {
-                const res = await fetch('http://127.0.0.1:8000/user/profile', {
+                const res = await fetch('/user/profile', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ username: loggedInUser, bio: newBio })
