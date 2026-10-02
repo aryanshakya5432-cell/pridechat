@@ -1,5 +1,7 @@
 from fastapi import FastAPI, HTTPException, Depends, status, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import HTMLResponse
+import os
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from database import init_db
@@ -49,6 +51,13 @@ class CreateGroupSchema(BaseModel):
     admin_username: str
     group_name: str
     members: List[str]
+
+@app.get("/", response_class=HTMLResponse)
+def serve_index():
+    if os.path.exists("index.html"):
+        with open("index.html", "r", encoding="utf-8") as f:
+            return f.read()
+    return "PrideChat Backend is running successfully!"
 
 @app.post("/login")
 def login(data: LoginSchema, db: Session = Depends(get_db)):
